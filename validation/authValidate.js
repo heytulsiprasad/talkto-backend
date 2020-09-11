@@ -26,9 +26,9 @@ const validateAuthInput = (data) => {
 	// Runs if password exists but not in proper format
 	if (
 		!Validator.isEmpty(data.password) &&
-		!Validator.isLength(data.password, { min: 6, max: 30 })
+		!Validator.isLength(data.password, { min: 3, max: 30 })
 	) {
-		errors.password = "Password must be at least 6 characters";
+		errors.password = "Password must be at least 3 characters";
 	}
 
 	return {

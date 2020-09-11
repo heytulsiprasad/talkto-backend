@@ -10,27 +10,23 @@ const flash = require("connect-flash");
 
 const app = express();
 
-// Connecting to database
-mongoose
-	.connect(process.env.MONGO_LOCAL_URI, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-		useCreateIndex: true,
-	})
-	.then(() => console.log(`Database connected!`))
-	.catch((e) => console.log(e));
+// Adding database to project
+require("./middleware/mongoose")(mongoose);
 
-// Passing passport instance to middleware
+// Passing passport instance to passport.js
 require("./middleware/passport")(passport);
 
 // Express session middlewares
 // NOTE: Must be before passport.session()
 app.use(
 	session({
-		secret: "my-secret",
+		secret: process.env.SESSION_SECRET,
 		resave: false,
 		saveUninitialized: true,
-		store: new MongoStore({ mongooseConnection: mongoose.connection }),
+		store: new MongoStore({
+			mongooseConnection: mongoose.connection,
+			ttl: 2 * 24 * 60 * 60,
+		}),
 	})
 );
 
@@ -50,17 +46,25 @@ app.use(flash());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// req.session.passport.user (session data) is same as the user id in user model from database
+
+// app.use((req, res, next) => {
+// 	console.log(req.session);
+// 	console.log("=================");
+// 	console.log(req.user);
+// 	next();
+// });
+
 // Setup server logging
 app.use(morgan("dev"));
 
 // Routes
-const auth = require("./routes/api/auth");
-app.use("/api/auth", auth);
+const auth = require("./routes/auth");
+app.use("/auth", auth);
 
 // All routes go here
-app.get("/", (req, res) => {
-	res.send("Sunshine is bright");
-});
+app.get("/", (req, res) => res.send("Sunshine is bright"));
+app.get("/profile", (req, res) => res.json(req.user));
 
 const PORT = 5000 || process.env.PORT;
 
