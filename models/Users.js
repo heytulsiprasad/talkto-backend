@@ -1,32 +1,59 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const Schema = mongoose.Schema;
+const { Schema } = mongoose;
 
-const UserSchema = new Schema({
-	local: {
+const FacebookSchema = new Schema(
+	{
+		id: String,
+		token: String,
+		name: String,
+		email: String,
+	},
+	{
+		timestamps: true,
+	}
+);
+
+const GoogleSchema = new Schema(
+	{
+		id: String,
+		token: String,
+		name: String,
+		email: String,
+	},
+	{
+		timestamps: true,
+	}
+);
+
+const LocalSchema = new Schema(
+	{
 		email: String,
 		password: String,
 	},
-	facebook: {
-		id: String,
-		token: String,
+	{
+		timestamps: true,
+	}
+);
+
+const UserSchema = new Schema(
+	{
 		name: String,
-		email: String,
+		bio: String,
+		phone: Number,
+		date: {
+			type: Date,
+			default: Date.now,
+		},
+		local: [LocalSchema],
+		google: [GoogleSchema],
+		facebook: [FacebookSchema],
 	},
-	twitter: {
-		id: String,
-		token: String,
-		displayName: String,
-		username: String,
-	},
-	google: {
-		id: String,
-		token: String,
-		email: String,
-		name: String,
-	},
-});
+	{
+		timestamps: true,
+	}
+);
 
 // Methods
 
@@ -34,8 +61,14 @@ UserSchema.methods.generateHash = (password) => {
 	return bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 };
 
-UserSchema.methods.validPassword = function (password) {
-	return bcrypt.compareSync(password, this.local.password);
+UserSchema.methods.isValidPassword = async function (password) {
+	try {
+		// Check/Compare Password
+		return await bcrypt.compareSync(password, this.local.password);
+	} catch (err) {
+		console.log(err);
+		throw new Error(err);
+	}
 };
 
 // Create Model

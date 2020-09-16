@@ -40,44 +40,60 @@ module.exports = (passport) => {
 			},
 			(req, email, password, done) => {
 				process.nextTick(() => {
-					User.findOne({ "local.email": email }, (err, user) => {
-						// Check for database errors
-						if (err) return done(err);
+					// Not logged in
+					if (!req.user) {
+						User.findOne({ "local.email": email }, (err, user) => {
+							if (err) return done(err);
 
-						// Check if user is found
-						if (user) {
-							return done(
-								null,
-								false,
-								req.flash("message", "That email already exists!")
-							);
-						}
+							// User found
+							if (user) {
+								return done(
+									null,
+									false,
+									req.flash("message", "That email already exists!")
+								);
+							}
 
-						// If the user isn't logged in
-						if (!req.user) {
+							// If no user found
 							let newUser = new User();
 
-							newUser.local.email = email;
-							newUser.local.password = newUser.generateHash(password);
+							newUser.local.push({
+								email: email,
+								password: newUser.generateHash(password),
+							});
 
 							newUser.save(function (err) {
 								if (err) throw err;
 								return done(null, newUser);
 							});
-						}
+						});
+					}
 
-						// Are logged in, but are trying to merge local account to some oauth acc
-						else {
-							let user = req.user;
-							user.local.email = email;
-							user.local.password = user.generateHash(password);
+					// Logged in (connect)
+					else {
+						const user = req.user;
+
+						if (user.local.length === 0) {
+							user.local.push({
+								email: email,
+								password: user.generateHash(password),
+							});
 
 							user.save((err) => {
 								if (err) throw err;
 								return done(null, user);
 							});
+						} else {
+							console.log("You're already authorized locally");
+							console.log(req.user);
+
+							return done(
+								null,
+								false,
+								req.flash({ message: "User already locally authorized" })
+							);
 						}
-					});
+					}
 				});
 			}
 		)
@@ -97,22 +113,26 @@ module.exports = (passport) => {
 			},
 			(req, email, password, done) => {
 				process.nextTick(() => {
-					User.findOne({ "local.email": email }, (err, user) => {
-						// Check for database errors
+					User.findOne({ "local.email": email }, async (err, user) => {
 						if (err) return done(err);
-						if (!user)
-							return done(null, false, req.flash("message", "No user found"));
 
-						// replace with user method on user model
-						if (!bcrypt.compareSync(password, user.local.password)) {
+						// User not found
+						if (!user) {
+							return done(null, false, req.flash("message", "No user found"));
+						}
+
+						// Password not match
+						if (!(await user.isValidPassword(password))) {
 							return done(
 								null,
 								false,
-								req.flash("message", "Invalid password")
+								req.flash("message", "Invalid Password")
 							);
 						}
 
-						if (user.validPassword(password)) return done(null, user);
+						if (await user.isValidPassword(password)) {
+							return done(null, user);
+						}
 					});
 				});
 			}
@@ -122,6 +142,7 @@ module.exports = (passport) => {
 	//////////////////////////// Facebook
 
 	passport.use(
+		// Things to include in facebook strategy
 		// https://stackoverflow.com/a/32370813/11674552
 		new FacebookStrategy(
 			{
@@ -136,28 +157,36 @@ module.exports = (passport) => {
 			},
 			function (req, accessToken, refreshToken, profile, done) {
 				process.nextTick(() => {
-					// User is not logged in
+					// Not logged in
 					if (!req.user) {
 						User.findOne({ "facebook.id": profile.id }, function (err, user) {
 							if (err) return done(err);
+
+							// User found
 							if (user) {
-								// If user unlinked their facebook we'd have deleted the token
+								// No token found
 								if (!user.facebook.token) {
-									user.facebook.token = accessToken;
-									user.facebook.name = `${profile.name.givenName} ${profile.name.familyName}`;
-									user.facebook.email = profile.emails[0].value;
+									user.facebook.push({
+										token: accessToken,
+										name: `${profile.name.givenName} ${profile.name.familyName}`,
+										email: profile.emails[0].value,
+									});
 
 									user.save((err) => {
 										if (err) throw err;
 									});
 								}
+
 								return done(null, user);
 							} else {
 								const newUser = new User();
-								newUser.facebook.id = profile.id;
-								newUser.facebook.token = accessToken;
-								newUser.facebook.name = `${profile.name.givenName} ${profile.name.familyName}`;
-								newUser.facebook.email = profile.emails[0].value;
+
+								newUser.facebook.push({
+									id: profile.id,
+									token: accessToken,
+									name: `${profile.name.givenName} ${profile.name.familyName}`,
+									email: profile.emails[0].value,
+								});
 
 								newUser.save(function (err) {
 									if (err) throw err;
@@ -167,18 +196,32 @@ module.exports = (passport) => {
 						});
 					}
 
-					// User is logged in, and needs to be merged
+					// Logged in
 					else {
 						let user = req.user;
-						user.facebook.id = profile.id;
-						user.facebook.token = accessToken;
-						user.facebook.name = `${profile.name.givenName} ${profile.emails[0].value}`;
-						user.facebook.email = profile.emails[0].value;
 
-						user.save((err) => {
-							if (err) throw err;
-							return done(null, user);
-						});
+						// No facebook auth
+						if (user.facebook.length === 0) {
+							user.facebook.push({
+								id: profile.id,
+								token: accessToken,
+								name: `${profile.name.givenName} ${profile.name.familyName}`,
+								email: profile.emails[0].value,
+							});
+
+							user.save((err) => {
+								if (err) throw err;
+								return done(null, user);
+							});
+						} else {
+							console.log("You're already authorized");
+							console.log(req.user);
+							return done(
+								null,
+								false,
+								req.flash({ message: "You're already authorized!" })
+							);
+						}
 					}
 				});
 			}
@@ -196,26 +239,37 @@ module.exports = (passport) => {
 			},
 			function (req, accessToken, refreshToken, profile, done) {
 				process.nextTick(() => {
+					// Not logged in
 					if (!req.user) {
 						User.findOne({ "google.id": profile.id }, function (err, user) {
 							if (err) return done(err);
+
+							// User found
 							if (user) {
+								// Token not found
 								if (!user.google.token) {
-									user.google.token = accessToken;
-									user.google.name = profile.displayName;
-									user.google.email = profile.emails[0].value;
+									user.google.push({
+										token: accessToken,
+										name: profile.displayName,
+										email: profile.emails[0].value,
+									});
 
 									user.save((err) => {
 										if (err) throw err;
 									});
 								}
+
 								return done(null, user);
 							} else {
+								// New User
 								const newUser = new User();
-								newUser.google.id = profile.id;
-								newUser.google.token = accessToken;
-								newUser.google.name = profile.displayName;
-								newUser.google.email = profile.emails[0].value;
+
+								newUser.google.push({
+									id: profile.id,
+									token: accessToken,
+									name: profile.displayName,
+									email: profile.emails[0].value,
+								});
 
 								newUser.save(function (err) {
 									if (err) throw err;
@@ -223,17 +277,32 @@ module.exports = (passport) => {
 								});
 							}
 						});
+
+						// Logged in
 					} else {
 						let user = req.user;
-						user.google.id = profile.id;
-						user.google.token = accessToken;
-						user.google.name = profile.displayName;
-						user.google.email = profile.emails[0].value;
 
-						user.save((err) => {
-							if (err) throw err;
-							return done(null, user);
-						});
+						if (user.google.length === 0) {
+							user.google.push({
+								id: profile.id,
+								token: accessToken,
+								name: profile.displayName,
+								email: profile.emails[0].value,
+							});
+
+							user.save((err) => {
+								if (err) throw err;
+								return done(null, user);
+							});
+						} else {
+							console.log("You're already authorized");
+							console.log(req.user);
+							return done(
+								null,
+								false,
+								req.flash({ message: "You're already authorized!" })
+							);
+						}
 					}
 				});
 			}

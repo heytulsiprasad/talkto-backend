@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const passport = require("passport");
@@ -9,6 +10,9 @@ const MongoStore = require("connect-mongo")(session);
 const flash = require("connect-flash");
 
 const app = express();
+
+// Setting up cors
+app.use(cors({ origin: "http://localhost:3000" }));
 
 // Adding database to project
 require("./middleware/mongoose")(mongoose);
@@ -35,7 +39,7 @@ app.use(
 // Runs on every request, to ensure the session contains a `req.user` object
 app.use(passport.initialize());
 
-// Is a passport strategy which loads the user object to `req.user`
+// Is a passport strategy which alters `req.user` from session id to entire deserialized user object
 // if it finds a corresponding serialized user (invokes deserializeUser)
 app.use(passport.session());
 

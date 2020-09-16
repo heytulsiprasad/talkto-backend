@@ -6,7 +6,7 @@ const router = express.Router();
 // Import validator
 const authValidate = require("../validation/authValidate");
 
-// @route POST api/auth/signup
+// @route POST /auth/signup
 // @desc Register new users to database
 // @access Public
 
@@ -36,7 +36,7 @@ router.post("/signup", (req, res, next) => {
 	})(req, res, next);
 });
 
-// @route POST api/auth/login
+// @route POST /auth/login
 // @desc Login users
 // @access Public
 
@@ -67,7 +67,7 @@ router.post("/login", (req, res, next) => {
 	})(req, res, next);
 });
 
-// @route POST api/auth/logout
+// @route POST /auth/logout
 // @desc Logout users
 // @access Public
 
@@ -88,10 +88,10 @@ router.post("/logout", (req, res, next) => {
 // 	}
 
 // 	// Redirect to login route
-// 	res.redirect("api/auth/login");
+// 	res.redirect("/auth/login");
 // }
 
-// @route GET api/auth/facebook
+// @route GET /auth/facebook
 // @desc Redirect to facebook for user to login
 // @access Public
 
@@ -100,21 +100,25 @@ router.get(
 	passport.authenticate("facebook", { scope: ["email"] })
 );
 
-// @route GET api/auth/facebook
-// @desc After successfull auth fb redirects to this
-// @access Public
+/*
+ * @route GET /auth/facebook
+ * @desc After successfull auth fb redirects to this
+ * @access Public
+ */
 
 router.get(
 	"/facebook/callback",
 	passport.authenticate("facebook", { failureRedirect: "/login" }),
 	function (req, res) {
-		// Successful authentication, redirect home.
-		console.log("Facebook auth success");
-		res.redirect("/profile");
+		// Successful authentication, redirect home
+		console.log(req.user);
+
+		// Redirects user to dashboard route on frontend
+		return res.redirect(302, "http://localhost:3000/dashboard");
 	}
 );
 
-// @route GET api/auth/google
+// @route GET /auth/google
 // @desc Redirect to google for user to login
 // @access Public
 
@@ -123,7 +127,7 @@ router.get(
 	passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// @route GET api/auth/facebook
+// @route GET /auth/facebook
 // @desc After successfull auth fb redirects to this
 // @access Public
 
@@ -132,8 +136,10 @@ router.get(
 	passport.authenticate("google", { failureRedirect: "/login" }),
 	function (req, res) {
 		// Successful authentication, redirect home.
-		console.log("Google auth success");
-		res.redirect("/profile");
+		console.log(req.user);
+
+		// Redirects user to dashboard route on frontend
+		return res.redirect(302, "http://localhost:3000/dashboard");
 	}
 );
 
@@ -149,14 +155,15 @@ router.get(
 );
 
 router.get("/connect/local", (req, res) =>
-	res.send("Here goes the local signup form!")
+	// Just for the failure redirect
+	res.send("This is failure redirect!")
 );
 
 router.post(
 	"/connect/local",
 	passport.authenticate("local-signup", {
 		successRedirect: "/profile",
-		failureRedirect: "/api/auth/connect/local",
+		failureRedirect: "/auth/connect/local",
 	})
 );
 
