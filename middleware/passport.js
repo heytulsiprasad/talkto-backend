@@ -47,34 +47,49 @@ module.exports = (passport) => {
         process.nextTick(() => {
           // Not logged in
           if (!req.user) {
-            User.findOne({ "local.email": email }, (err, user) => {
+            User.findOne({ email: email }, (err, user) => {
               if (err) return done(err);
 
-              // User found
+              // user exists globally
               if (user) {
-                return done(
-                  null,
-                  false,
-                  req.flash("message", "That email already exists!")
-                );
+                if (user.local[0]) {
+                  return done(
+                    null,
+                    false,
+                    req.flash("message", "That email already exists!")
+                  );
+                } else if (user.facebook[0] || user.google[0]) {
+                  user.local.push({
+                    email: email,
+                    password: user.generateHash(password),
+                  });
+
+                  user.save((err) => {
+                    if (err) throw err;
+                    return done(null, user);
+                  });
+                }
               }
 
-              // If no user found
-              let newUser = new User();
+              // No user anywhere
+              else {
+                const user = new User();
 
-              newUser.local.push({
-                email: email,
-                password: newUser.generateHash(password),
-              });
+                user.email = email;
+                user.local.push({
+                  email: email,
+                  password: user.generateHash(password),
+                });
 
-              newUser.save(function (err) {
-                if (err) throw err;
-                return done(null, newUser);
-              });
+                user.save((err) => {
+                  if (err) throw err;
+                  return done(null, user);
+                });
+              }
             });
           }
 
-          // Logged in (connect)
+          // Logged in (LEGACY)
           else {
             const user = req.user;
 
@@ -166,33 +181,56 @@ module.exports = (passport) => {
         process.nextTick(() => {
           // Not logged in
           if (!req.user) {
-            User.findOne({ "facebook.id": profile.id }, function (err, user) {
+            User.findOne({ email: profile.emails[0].value }, function (
+              err,
+              user
+            ) {
               if (err) return done(err);
 
-              // User found
-              if (user) return done(null, user);
-              else {
-                const user = new User();
+              if (user) {
+                if (user.facebook[0]) {
+                  return done(null, user);
+                }
 
-                const newUser = {
+                if (user.local[0] || user.google[0]) {
+                  user.facebook.push({
+                    id: profile.id,
+                    token: accessToken,
+                    name: `${profile.name.givenName} ${profile.name.familyName}`,
+                    email: profile.emails[0].value,
+                  });
+
+                  user.name = `${profile.name.givenName} ${profile.name.familyName}`;
+
+                  user.save((err) => {
+                    if (err) throw err;
+                    return done(null, user);
+                  });
+                }
+              }
+
+              // Not available anywhere
+              else {
+                const newUser = new User();
+
+                newUser.email = profile.emails[0].value;
+                newUser.name = `${profile.name.givenName} ${profile.name.familyName}`;
+                newUser.facebook.push({
                   id: profile.id,
                   token: accessToken,
                   name: `${profile.name.givenName} ${profile.name.familyName}`,
                   email: profile.emails[0].value,
-                };
-
-                user.facebook.push(newUser);
-
-                user.save(function (err) {
-                  if (err) throw err;
                 });
 
-                return done(null, user);
+                newUser.save((err) => {
+                  if (err) throw err;
+                  return done(null, newUser);
+                });
               }
             });
           }
 
-          // Logged in
+          // Logged in (LEGACY)
           else {
             const user = req.user;
 
@@ -242,30 +280,77 @@ module.exports = (passport) => {
         process.nextTick(() => {
           // Not logged in
           if (!req.user) {
-            User.findOne({ "google.id": profile.id }, function (err, user) {
+            User.findOne({ email: profile.emails[0].value }, function (
+              err,
+              user
+            ) {
               if (err) return done(err);
 
-              if (user) return done(null, user);
+              if (user) {
+                if (user.google[0]) {
+                  return done(null, user);
+                } else if (user.local[0] || user.facebook[0]) {
+                  user.google.push({
+                    id: profile.id,
+                    token: accessToken,
+                    name: profile.displayName,
+                    email: profile.emails[0].value,
+                  });
+
+                  user.name = profile.displayName;
+
+                  user.save((err) => {
+                    if (err) throw err;
+                    return done(null, user);
+                  });
+                }
+              }
+
+              // Not available anywhere
               else {
-                const user = new User();
-                const newUser = {
+                const newUser = new User();
+
+                newUser.name = profile.displayName;
+                newUser.email = profile.emails[0].value;
+
+                newUser.google.push({
                   id: profile.id,
                   token: accessToken,
                   name: profile.displayName,
                   email: profile.emails[0].value,
-                };
-
-                user.google.push(newUser);
-
-                user.save(function (err) {
-                  if (err) throw err;
                 });
 
-                return done(null, user);
+                newUser.save((err) => {
+                  if (err) throw err;
+                  return done(null, newUser);
+                });
               }
             });
 
-            // Logged in
+            // User.findOne({ "google.id": profile.id }, function (err, user) {
+            //   if (err) return done(err);
+
+            //   if (user) return done(null, user);
+            //   else {
+            //     const user = new User();
+            //     const newUser = {
+            //       id: profile.id,
+            //       token: accessToken,
+            //       name: profile.displayName,
+            //       email: profile.emails[0].value,
+            //     };
+
+            //     user.google.push(newUser);
+
+            //     user.save(function (err) {
+            //       if (err) throw err;
+            //     });
+
+            //     return done(null, user);
+            //   }
+            // });
+
+            // Logged in (LEGACY)
           } else {
             const user = req.user;
 
