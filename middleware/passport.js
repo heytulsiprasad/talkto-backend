@@ -217,7 +217,7 @@ module.exports = (passport) => {
               console.log(req.user);
               return done(
                 null,
-                false,
+                user,
                 req.flash({
                   message: "You're already authorized via Facebook!",
                 })
@@ -289,7 +289,7 @@ module.exports = (passport) => {
               console.log(req.user);
               return done(
                 null,
-                false,
+                user,
                 req.flash({ message: "You're already authorized via Google" })
               );
             }
