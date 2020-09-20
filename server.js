@@ -23,15 +23,15 @@ require("./middleware/passport")(passport);
 // Express session middlewares
 // NOTE: Must be before passport.session()
 app.use(
-	session({
-		secret: process.env.SESSION_SECRET,
-		resave: false,
-		saveUninitialized: true,
-		store: new MongoStore({
-			mongooseConnection: mongoose.connection,
-			ttl: 2 * 24 * 60 * 60,
-		}),
-	})
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      ttl: 2 * 24 * 60 * 60, // 2 days
+    }),
+  })
 );
 
 // Passport middlewares
@@ -68,7 +68,6 @@ app.use("/auth", auth);
 
 // All routes go here
 app.get("/", (req, res) => res.send("Sunshine is bright"));
-app.get("/profile", (req, res) => res.json(req.user));
 
 const PORT = 5000 || process.env.PORT;
 
