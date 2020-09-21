@@ -126,12 +126,14 @@ router.get(
 // @desc Redirect to google for user to login
 // @access Public
 
+// @dev https://console.developers.google.com/
+
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// @route GET /auth/facebook
+// @route GET /auth/google
 // @desc After successfull auth fb redirects to this
 // @access Public
 

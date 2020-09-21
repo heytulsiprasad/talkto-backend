@@ -171,7 +171,7 @@ module.exports = (passport) => {
         clientID: authConfig.facebookAuth.clientID,
         clientSecret: authConfig.facebookAuth.clientSecret,
         callbackURL: authConfig.facebookAuth.callbackURL,
-        profileFields: ["id", "email", "name"],
+        profileFields: ["id", "email", "name", "photos"],
 
         // when passreqtocallback is true, add req to callback
         // https://github.com/jaredhanson/passport-facebook/issues/185#issuecomment-335530926
@@ -213,6 +213,9 @@ module.exports = (passport) => {
               else {
                 const newUser = new User();
 
+                console.log(profile);
+
+                newUser.image = profile.photos[0].value;
                 newUser.email = profile.emails[0].value;
                 newUser.name = `${profile.name.givenName} ${profile.name.familyName}`;
                 newUser.facebook.push({
@@ -312,6 +315,7 @@ module.exports = (passport) => {
 
                 newUser.name = profile.displayName;
                 newUser.email = profile.emails[0].value;
+                newUser.image = profile.photos[0].value;
 
                 newUser.google.push({
                   id: profile.id,
@@ -320,35 +324,14 @@ module.exports = (passport) => {
                   email: profile.emails[0].value,
                 });
 
+                // console.log(profile);
+
                 newUser.save((err) => {
                   if (err) throw err;
                   return done(null, newUser);
                 });
               }
             });
-
-            // User.findOne({ "google.id": profile.id }, function (err, user) {
-            //   if (err) return done(err);
-
-            //   if (user) return done(null, user);
-            //   else {
-            //     const user = new User();
-            //     const newUser = {
-            //       id: profile.id,
-            //       token: accessToken,
-            //       name: profile.displayName,
-            //       email: profile.emails[0].value,
-            //     };
-
-            //     user.google.push(newUser);
-
-            //     user.save(function (err) {
-            //       if (err) throw err;
-            //     });
-
-            //     return done(null, user);
-            //   }
-            // });
 
             // Logged in (LEGACY)
           } else {
