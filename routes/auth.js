@@ -151,4 +151,59 @@ router.get(
   }
 );
 
+// @route GET /auth/twitter
+// @desc Redirect to twitter for user to login
+// @access Public
+
+// @dev https://developer.twitter.com/en/portal/projects-and-apps
+
+router.get("/twitter", passport.authenticate("twitter"));
+
+// @route GET /auth/twitter/callback
+// @desc After successfull auth twitter redirects to this
+// @access Public
+
+router.get(
+  "/twitter/callback",
+  passport.authenticate("twitter", {
+    failureRedirect: "http://localhost:3000/login",
+  }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    console.log(req.user);
+
+    // Redirects user to dashboard route on frontend
+    return res.redirect(302, "http://localhost:3000");
+  }
+);
+
+// @route GET /auth/github
+// @desc Redirect to github for user to login
+// @access Public
+
+// @dev https://github.com/settings/developers
+
+router.get(
+  "/github",
+  passport.authenticate("github", { scope: ["user:email"] })
+);
+
+// @route GET /auth/github/callback
+// @desc After successfull auth github redirects to this
+// @access Public
+
+router.get(
+  "/github/callback",
+  passport.authenticate("github", {
+    failureRedirect: "http://localhost:3000/login",
+  }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    console.log(req.user);
+
+    // Redirects user to dashboard route on frontend
+    return res.redirect(302, "http://localhost:3000");
+  }
+);
+
 module.exports = router;

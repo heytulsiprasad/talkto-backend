@@ -1,6 +1,9 @@
 const LocalStrategy = require("passport-local").Strategy;
 const FacebookStrategy = require("passport-facebook").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const TwitterStrategy = require("passport-twitter").Strategy;
+const GitHubStrategy = require("passport-github2").Strategy;
+
 const bcrypt = require("bcrypt");
 
 const User = require("../models/Users");
@@ -58,17 +61,17 @@ module.exports = (passport) => {
                     false,
                     req.flash("message", "That email already exists!")
                   );
-                } else if (user.facebook[0] || user.google[0]) {
-                  user.local.push({
-                    email: email,
-                    password: user.generateHash(password),
-                  });
-
-                  user.save((err) => {
-                    if (err) throw err;
-                    return done(null, user);
-                  });
                 }
+
+                user.local.push({
+                  email: email,
+                  password: user.generateHash(password),
+                });
+
+                user.save((err) => {
+                  if (err) throw err;
+                  return done(null, user);
+                });
               }
 
               // No user anywhere
@@ -87,34 +90,6 @@ module.exports = (passport) => {
                 });
               }
             });
-          }
-
-          // Logged in (LEGACY)
-          else {
-            const user = req.user;
-
-            if (user.local.length === 0) {
-              const newUser = {
-                email: email,
-                password: user.generateHash(password),
-              };
-
-              user.local.push(newUser);
-
-              user.save((err) => {
-                if (err) throw err;
-                return done(null, user);
-              });
-            } else {
-              console.log("You're already authorized locally");
-              console.log(req.user);
-
-              return done(
-                null,
-                false,
-                req.flash({ message: "User already locally authorized" })
-              );
-            }
           }
         });
       }
@@ -135,12 +110,24 @@ module.exports = (passport) => {
       },
       (req, email, password, done) => {
         process.nextTick(() => {
-          User.findOne({ "local.email": email }, (err, user) => {
+          User.findOne({ email: email }, (err, user) => {
             if (err) return done(err);
 
             // No user
             if (!user) {
               return done(null, false, req.flash("emailMsg", "No user found"));
+            }
+
+            // No local user
+            if (!user.local.email) {
+              return done(
+                null,
+                false,
+                req.flash(
+                  "emailMsg",
+                  "User signed up from third party account, you can still register"
+                )
+              );
             }
 
             // Password not match
@@ -192,21 +179,19 @@ module.exports = (passport) => {
                   return done(null, user);
                 }
 
-                if (user.local[0] || user.google[0]) {
-                  user.facebook.push({
-                    id: profile.id,
-                    token: accessToken,
-                    name: `${profile.name.givenName} ${profile.name.familyName}`,
-                    email: profile.emails[0].value,
-                  });
+                user.facebook.push({
+                  id: profile.id,
+                  token: accessToken,
+                  name: `${profile.name.givenName} ${profile.name.familyName}`,
+                  email: profile.emails[0].value,
+                });
 
-                  user.name = `${profile.name.givenName} ${profile.name.familyName}`;
+                user.name = `${profile.name.givenName} ${profile.name.familyName}`;
 
-                  user.save((err) => {
-                    if (err) throw err;
-                    return done(null, user);
-                  });
-                }
+                user.save((err) => {
+                  if (err) throw err;
+                  return done(null, user);
+                });
               }
 
               // Not available anywhere
@@ -231,39 +216,6 @@ module.exports = (passport) => {
                 });
               }
             });
-          }
-
-          // Logged in (LEGACY)
-          else {
-            const user = req.user;
-
-            // No facebook auth
-            if (user.facebook.length === 0) {
-              const newUser = {
-                id: profile.id,
-                token: accessToken,
-                name: `${profile.name.givenName} ${profile.name.familyName}`,
-                email: profile.emails[0].value,
-              };
-
-              user.facebook.push(newUser);
-
-              user.save((err) => {
-                if (err) throw err;
-              });
-
-              return done(null, user);
-            } else {
-              console.log("You're already authorized via Facebook");
-              console.log(req.user);
-              return done(
-                null,
-                user,
-                req.flash({
-                  message: "You're already authorized via Facebook!",
-                })
-              );
-            }
           }
         });
       }
@@ -292,21 +244,21 @@ module.exports = (passport) => {
               if (user) {
                 if (user.google[0]) {
                   return done(null, user);
-                } else if (user.local[0] || user.facebook[0]) {
-                  user.google.push({
-                    id: profile.id,
-                    token: accessToken,
-                    name: profile.displayName,
-                    email: profile.emails[0].value,
-                  });
-
-                  user.name = profile.displayName;
-
-                  user.save((err) => {
-                    if (err) throw err;
-                    return done(null, user);
-                  });
                 }
+
+                user.google.push({
+                  id: profile.id,
+                  token: accessToken,
+                  name: profile.displayName,
+                  email: profile.emails[0].value,
+                });
+
+                user.name = profile.displayName;
+
+                user.save((err) => {
+                  if (err) throw err;
+                  return done(null, user);
+                });
               }
 
               // Not available anywhere
@@ -332,36 +284,127 @@ module.exports = (passport) => {
                 });
               }
             });
+          }
+        });
+      }
+    )
+  );
 
-            // Logged in (LEGACY)
-          } else {
-            const user = req.user;
+  //////////////////////////// Twitter
+  passport.use(
+    new TwitterStrategy(
+      {
+        consumerKey: authConfig.twitterAuth.clientID,
+        consumerSecret: authConfig.twitterAuth.clientSecret,
+        callbackURL: authConfig.twitterAuth.callbackURL,
 
-            if (user.google.length === 0) {
-              const newUser = {
+        // https://github.com/jaredhanson/passport-twitter/issues/67#issuecomment-216644224
+        includeEmail: true,
+        passReqToCallback: true,
+      },
+      function (req, accessToken, tokenSecret, profile, done) {
+        process.nextTick(() => {
+          // Not logged in
+          if (!req.user) {
+            User.findOne({ email: profile.emails[0].value }, (err, user) => {
+              if (err) return done(err);
+
+              if (user) {
+                if (user.twitter[0]) {
+                  return done(null, user);
+                }
+
+                user.twitter.push({
+                  id: profile.id,
+                  token: accessToken,
+                  name: profile.displayName,
+                  email: profile.emails[0].value,
+                });
+
+                user.save((err) => {
+                  if (err) throw err;
+                  return done(null, user);
+                });
+              }
+
+              // Not available anywhere
+              else {
+                const newUser = new User();
+
+                newUser.email = profile.emails[0].value;
+                newUser.image = profile.photos[0].value;
+                newUser.name = profile.displayName;
+
+                newUser.twitter.push({
+                  id: profile.id,
+                  token: accessToken,
+                  name: profile.displayName,
+                  email: profile.emails[0].value,
+                });
+
+                newUser.save((err) => {
+                  if (err) throw err;
+                  done(null, newUser);
+                });
+              }
+            });
+          }
+        });
+      }
+    )
+  );
+
+  passport.use(
+    new GitHubStrategy(
+      {
+        clientID: authConfig.githubAuth.clientID,
+        clientSecret: authConfig.githubAuth.clientSecret,
+        callbackURL: authConfig.githubAuth.callbackURL,
+      },
+      function (accessToken, refreshToken, profile, done) {
+        process.nextTick(() => {
+          User.findOne({ email: profile.emails[0].value }, (err, user) => {
+            if (err) return done(err);
+
+            if (user) {
+              if (user.github[0]) {
+                return done(null, user);
+              }
+
+              user.github.push({
                 id: profile.id,
                 token: accessToken,
                 name: profile.displayName,
                 email: profile.emails[0].value,
-              };
-
-              user.google.push(newUser);
+              });
 
               user.save((err) => {
                 if (err) throw err;
+                return done(null, user);
+              });
+            }
+
+            // Not available anywhere
+            else {
+              const newUser = new User();
+
+              newUser.email = profile.emails[0].value;
+              newUser.image = profile.photos[0].value;
+              newUser.name = profile.displayName;
+
+              newUser.github.push({
+                id: profile.id,
+                token: accessToken,
+                name: profile.displayName,
+                email: profile.emails[0].value,
               });
 
-              return done(null, user);
-            } else {
-              console.log("You're already authorized via Google");
-              console.log(req.user);
-              return done(
-                null,
-                user,
-                req.flash({ message: "You're already authorized via Google" })
-              );
+              newUser.save((err) => {
+                if (err) throw err;
+                done(null, newUser);
+              });
             }
-          }
+          });
         });
       }
     )

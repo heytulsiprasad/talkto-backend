@@ -17,6 +17,20 @@ const GoogleSchema = new Schema({
   email: String,
 });
 
+const TwitterSchema = new Schema({
+  id: String,
+  token: String,
+  name: String,
+  email: String,
+});
+
+const GitHubSchema = new Schema({
+  id: String,
+  token: String,
+  name: String,
+  email: String,
+});
+
 const LocalSchema = new Schema({
   email: String,
   password: String,
@@ -24,12 +38,19 @@ const LocalSchema = new Schema({
 
 const UserSchema = new Schema(
   {
-    name: String,
+    name: {
+      type: String,
+      default: "Valued User",
+    },
     bio: String,
     phone: Number,
-    image: String,
+    image: {
+      type: String,
+      default: "https://i.imgur.com/lYw8HjU.jpg",
+    },
     email: {
       type: String,
+      unique: true,
       required: true,
     },
     date: {
@@ -39,6 +60,8 @@ const UserSchema = new Schema(
     local: [LocalSchema],
     google: [GoogleSchema],
     facebook: [FacebookSchema],
+    twitter: [TwitterSchema],
+    github: [GitHubSchema],
   },
   {
     timestamps: true,
@@ -55,6 +78,24 @@ LocalSchema.set("toJSON", {
 });
 
 GoogleSchema.set("toJSON", {
+  transform: function (doc, ret, opt) {
+    delete ret._id;
+    delete ret.id;
+    delete ret.token;
+    return ret;
+  },
+});
+
+TwitterSchema.set("toJSON", {
+  transform: function (doc, ret, opt) {
+    delete ret._id;
+    delete ret.id;
+    delete ret.token;
+    return ret;
+  },
+});
+
+GitHubSchema.set("toJSON", {
   transform: function (doc, ret, opt) {
     delete ret._id;
     delete ret.id;
