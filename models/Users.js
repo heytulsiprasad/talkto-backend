@@ -47,6 +47,7 @@ const UserSchema = new Schema(
 // https://stackoverflow.com/a/50552763/11674552
 LocalSchema.set("toJSON", {
   transform: function (doc, ret, opt) {
+    delete ret._id;
     delete ret.password;
     return ret;
   },

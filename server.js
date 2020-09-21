@@ -66,6 +66,9 @@ app.use(morgan("dev"));
 const auth = require("./routes/auth");
 app.use("/auth", auth);
 
+const profile = require("./routes/profile");
+app.use("/profile", profile);
+
 // All routes go here
 app.get("/", (req, res) => res.send("Sunshine is bright"));
 

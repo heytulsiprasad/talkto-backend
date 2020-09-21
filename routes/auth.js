@@ -1,21 +1,10 @@
 const express = require("express");
-const { restart } = require("nodemon");
 const passport = require("passport");
 
 const router = express.Router();
 
 // Import validator
 const authValidate = require("../validation/authValidate");
-
-// Acts as an middleware to check auth state and give access to private routes
-function isLoggedIn(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-
-  // Redirect to login route
-  return res.redirect(302, "http://localhost:3000/login");
-}
 
 // @route GET /auth/state
 // @desc Is user logged in/not
@@ -24,15 +13,6 @@ function isLoggedIn(req, res, next) {
 router.get("/state", (req, res, next) => {
   let isLogged = req.isAuthenticated();
   return res.send(isLogged);
-});
-
-// @route GET /auth/profile
-// @desc Get user profile
-// @access Private
-
-router.get("/profile", isLoggedIn, (req, res, next) => {
-  res.json(req.user);
-  return next();
 });
 
 // @route POST /auth/signup
