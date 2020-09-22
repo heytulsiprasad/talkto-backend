@@ -42,11 +42,12 @@ router.post("/edit", isLoggedIn, (req, res, next) => {
       return res.status(400).json(errors);
     }
 
-    const { name, phone, bio } = req.body;
+    const { name, phone, bio, image } = req.body;
 
     user.name = name || user.name;
     user.phone = phone || user.phone;
     user.bio = bio || user.bio;
+    user.image = image || user.image;
 
     user.save((err) => {
       if (err) {

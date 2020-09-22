@@ -119,13 +119,13 @@ module.exports = (passport) => {
             }
 
             // No local user
-            if (!user.local.email) {
+            if (!user.local[0].email) {
               return done(
                 null,
                 false,
                 req.flash(
                   "emailMsg",
-                  "User signed up from third party account, you can still register"
+                  "User logged in from third party account, you can still register"
                 )
               );
             }
