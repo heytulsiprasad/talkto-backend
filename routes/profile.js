@@ -1,9 +1,13 @@
 const express = require("express");
 const router = new express.Router();
 
-const frontendUrl = process.env.FRONTEND_URL;
 const User = require("./../models/Users");
 const profileValidate = require("./../validation/profileValidate");
+
+const frontendUrl =
+  process.env.NODE_ENV === "production"
+    ? process.env.FRONTEND_PROD_URL
+    : process.env.FRONTEND_LOCAL_URL;
 
 // Acts as an middleware to check auth state and give access to private routes
 function isLoggedIn(req, res, next) {

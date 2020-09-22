@@ -2,7 +2,11 @@ const express = require("express");
 const passport = require("passport");
 
 const router = express.Router();
-const frontendUrl = process.env.FRONTEND_URL;
+
+const frontendUrl =
+  process.env.NODE_ENV === "production"
+    ? process.env.FRONTEND_PROD_URL
+    : process.env.FRONTEND_LOCAL_URL;
 
 // Import validator
 const authValidate = require("../validation/authValidate");
