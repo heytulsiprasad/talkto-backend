@@ -2,7 +2,6 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const morgan = require("morgan");
 const mongoose = require("mongoose");
 const passport = require("passport");
 const session = require("express-session");
@@ -10,6 +9,12 @@ const MongoStore = require("connect-mongo")(session);
 const flash = require("connect-flash");
 
 const app = express();
+
+// Logging middleware
+if (process.env.NODE_ENV !== "production") {
+  const morgan = require("morgan");
+  app.use(morgan("dev"));
+}
 
 // Setting up cors
 app.use(
@@ -65,9 +70,6 @@ app.use(express.urlencoded({ extended: true }));
 // 	console.log(req.user);
 // 	next();
 // });
-
-// Setup server logging
-app.use(morgan("dev"));
 
 // Routes
 const auth = require("./routes/auth");
