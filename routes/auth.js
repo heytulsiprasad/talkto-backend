@@ -102,6 +102,8 @@ router.get("/logout", (req, res, next) => {
 // @desc Redirect to facebook for user to login
 // @access Public
 
+// @dev https://developers.facebook.com/apps/
+
 router.get(
   "/facebook",
   passport.authenticate("facebook", { scope: ["email"] })
