@@ -1,6 +1,7 @@
 const express = require("express");
 const router = new express.Router();
 
+const frontendUrl = process.env.FRONTEND_URL;
 const User = require("./../models/Users");
 const profileValidate = require("./../validation/profileValidate");
 
@@ -11,7 +12,7 @@ function isLoggedIn(req, res, next) {
   }
 
   // Redirect to login route
-  return res.redirect(302, "http://localhost:3000/login");
+  return res.redirect(302, `${frontendUrl}/login`);
 }
 
 // @route GET /profile

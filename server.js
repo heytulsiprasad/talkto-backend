@@ -12,7 +12,14 @@ const flash = require("connect-flash");
 const app = express();
 
 // Setting up cors
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    preflightContinue: true,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
 
 // Adding database to project
 require("./middleware/mongoose")(mongoose);

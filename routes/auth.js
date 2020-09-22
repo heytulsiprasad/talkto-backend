@@ -2,6 +2,7 @@ const express = require("express");
 const passport = require("passport");
 
 const router = express.Router();
+const frontendUrl = process.env.FRONTEND_URL;
 
 // Import validator
 const authValidate = require("../validation/authValidate");
@@ -111,14 +112,14 @@ router.get(
 router.get(
   "/facebook/callback",
   passport.authenticate("facebook", {
-    failureRedirect: "http://localhost:3000/login",
+    failureRedirect: `${frontendUrl}/login`,
   }),
   function (req, res) {
     // Successful authentication, redirect home
     console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, "http://localhost:3000");
+    return res.redirect(302, frontendUrl);
   }
 );
 
@@ -140,14 +141,14 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:3000/login",
+    failureRedirect: `${frontendUrl}/login`,
   }),
   function (req, res) {
     // Successful authentication, redirect home.
     console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, "http://localhost:3000");
+    return res.redirect(302, frontendUrl);
   }
 );
 
@@ -166,14 +167,14 @@ router.get("/twitter", passport.authenticate("twitter"));
 router.get(
   "/twitter/callback",
   passport.authenticate("twitter", {
-    failureRedirect: "http://localhost:3000/login",
+    failureRedirect: `${frontendUrl}/login`,
   }),
   function (req, res) {
     // Successful authentication, redirect home.
     console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, "http://localhost:3000");
+    return res.redirect(302, frontendUrl);
   }
 );
 
@@ -195,14 +196,14 @@ router.get(
 router.get(
   "/github/callback",
   passport.authenticate("github", {
-    failureRedirect: "http://localhost:3000/login",
+    failureRedirect: `${frontendUrl}/login`,
   }),
   function (req, res) {
     // Successful authentication, redirect home.
     console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, "http://localhost:3000");
+    return res.redirect(302, frontendUrl);
   }
 );
 
