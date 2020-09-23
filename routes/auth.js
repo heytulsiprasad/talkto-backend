@@ -77,7 +77,7 @@ router.post("/login", (req, res, next) => {
 
     // Finally login if everything is sure
     req.logIn(user, (err) => {
-      console.log("Logging in", user);
+      // console.log("Logging in", user);
       // console.log("3", req.isAuthenticated());
       return res.json({ user });
     });
@@ -90,7 +90,7 @@ router.post("/login", (req, res, next) => {
 
 router.get("/logout", (req, res, next) => {
   if (req.isAuthenticated()) {
-    console.log("Logging out", req.user);
+    // console.log("Logging out", req.user);
     req.logout();
     return res.json({ message: "Logout successful!" });
   } else {
@@ -122,7 +122,7 @@ router.get(
   }),
   function (req, res) {
     // Successful authentication, redirect home
-    console.log(req.user);
+    // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
     return res.redirect(302, frontendUrl);
@@ -151,7 +151,7 @@ router.get(
   }),
   function (req, res) {
     // Successful authentication, redirect home.
-    console.log(req.user);
+    // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
     return res.redirect(302, frontendUrl);
@@ -177,7 +177,7 @@ router.get(
   }),
   function (req, res) {
     // Successful authentication, redirect home.
-    console.log(req.user);
+    // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
     return res.redirect(302, frontendUrl);
@@ -206,7 +206,7 @@ router.get(
   }),
   function (req, res) {
     // Successful authentication, redirect home.
-    console.log(req.user);
+    // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
     return res.redirect(302, frontendUrl);

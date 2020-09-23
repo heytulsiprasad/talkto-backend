@@ -198,7 +198,7 @@ module.exports = (passport) => {
               else {
                 const newUser = new User();
 
-                console.log(profile);
+                // console.log(profile);
 
                 newUser.image = profile.photos[0].value;
                 newUser.email = profile.emails[0].value;
