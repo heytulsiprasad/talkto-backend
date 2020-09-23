@@ -16,6 +16,10 @@ if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
 
+// Express middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 const origin =
   process.env.NODE_ENV === "production"
     ? process.env.FRONTEND_PROD_URL
@@ -62,10 +66,6 @@ app.use(passport.session());
 
 // Allows us to store a message inside `req.flash()` and access it anywhere
 app.use(flash());
-
-// Express middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // req.session.passport.user (session data) is same as the user id in user model from database
 

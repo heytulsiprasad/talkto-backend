@@ -1,5 +1,5 @@
 const express = require("express");
-const router = new express.Router();
+const router = express.Router();
 
 const User = require("./../models/Users");
 const profileValidate = require("./../validation/profileValidate");
@@ -16,7 +16,7 @@ function isLoggedIn(req, res, next) {
   }
 
   // Redirect to login route
-  return res.redirect(302, `${frontendUrl}/login`);
+  return res.redirect(`${frontendUrl}/login`);
 }
 
 // @route GET /profile
@@ -24,8 +24,7 @@ function isLoggedIn(req, res, next) {
 // @access Private
 
 router.get("/", isLoggedIn, (req, res, next) => {
-  res.json(req.user);
-  return next();
+  return res.json(req.user);
 });
 
 // @route POST /profile/edit

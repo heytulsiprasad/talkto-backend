@@ -78,8 +78,8 @@ router.post("/login", (req, res, next) => {
     // Finally login if everything is sure
     req.logIn(user, (err) => {
       console.log("Logging in", user);
+      // console.log("3", req.isAuthenticated());
       return res.json({ user });
-      // return res.redirect(302, "http://localhost:3000");
     });
   })(req, res, next);
 });
