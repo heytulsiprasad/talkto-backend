@@ -10,6 +10,7 @@ module.exports = (mongoose) => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useCreateIndex: true,
+      useFindAndModify: false,
     })
     .then(() => console.log(`Database connected!`))
     .catch((e) => console.log(e));

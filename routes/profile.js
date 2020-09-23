@@ -1,3 +1,4 @@
+const { response } = require("express");
 const express = require("express");
 const router = express.Router();
 
@@ -61,6 +62,17 @@ router.post("/edit", isLoggedIn, (req, res, next) => {
 
       return res.send();
     });
+  });
+});
+
+// @route POST /profile/delete
+// @desc Delete user profile
+// @access Private
+
+router.delete("/delete", isLoggedIn, (req, res) => {
+  User.findByIdAndRemove({ _id: req.user._id }, (err, user) => {
+    if (err) throw new Error(err);
+    return res.send(true);
   });
 });
 
