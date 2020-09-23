@@ -119,7 +119,7 @@ module.exports = (passport) => {
             }
 
             // No local user
-            if (!user.local[0].email) {
+            if (!user.local[0]) {
               return done(
                 null,
                 false,
