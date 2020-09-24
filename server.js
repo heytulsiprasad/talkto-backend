@@ -43,21 +43,25 @@ require("./middleware/passport")(passport);
 
 // Express session middlewares
 // NOTE: Must be before passport.session()
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    store: new MongoStore({
-      mongooseConnection: mongoose.connection,
-      ttl: 2 * 24 * 60 * 60, // 2 days
-    }),
-    cookie: {
-      sameSite: "none",
-      secure: true,
-    },
-  })
-);
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection,
+    ttl: 2 * 24 * 60 * 60, // 2 days
+  }),
+  cookie: {
+    sameSite: "none",
+  },
+};
+
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1); // trust first proxy
+  sessionConfig.cookie.secure = true; // serve secure cookies
+}
+
+app.use(session(sessionConfig));
 
 // Passport middlewares
 
