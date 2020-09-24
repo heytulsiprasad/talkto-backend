@@ -52,6 +52,10 @@ app.use(
       mongooseConnection: mongoose.connection,
       ttl: 2 * 24 * 60 * 60, // 2 days
     }),
+    cookie: {
+      sameSite: "none",
+      secure: true,
+    },
   })
 );
 

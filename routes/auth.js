@@ -125,7 +125,7 @@ router.get(
     // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, frontendUrl);
+    return res.redirect(frontendUrl);
   }
 );
 
@@ -154,7 +154,7 @@ router.get(
     // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, frontendUrl);
+    return res.redirect(frontendUrl);
   }
 );
 
@@ -180,7 +180,7 @@ router.get(
     // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, frontendUrl);
+    return res.redirect(frontendUrl);
   }
 );
 
@@ -209,7 +209,7 @@ router.get(
     // console.log(req.user);
 
     // Redirects user to dashboard route on frontend
-    return res.redirect(302, frontendUrl);
+    return res.redirect(frontendUrl);
   }
 );
 
