@@ -23,6 +23,11 @@ Will make more fullstack projects in future. Thanks :)
 - [Backend](https://github.com/heytulsiprasad/talkto-backend)
 - [Frontend](https://github.com/heytulsiprasad/talkto-frontend)
 
+### Related posts
+
+- [Top 5 CORS Issues You Don't Want To Run Into](https://dev.to/heytulsiprasad/top-5-cors-issues-you-don-t-want-to-run-into-16hi)
+- [How to setup MongoDB with Node.js and Express?](https://dev.to/heytulsiprasad/how-to-setup-mongodb-with-node-js-and-express-2hki)
+
 ### Links
 
 - [Talk to (Live Demo)](https://talk-to.vercel.app)
